@@ -1,236 +1,390 @@
-/*----- constants -----*/
-var bombImage = '<img src="images/bomb.png">';
-var flagImage = '<img src="images/flag.png">';
-var wrongBombImage = '<img src="images/wrong-bomb.png">'
-var sizeLookup = {
-  '9': {totalBombs: 10, tableWidth: '245px'},
-  '16': {totalBombs: 40, tableWidth: '420px'},
-  '30': {totalBombs: 160, tableWidth: '794px'}
-};
-var colors = [
-  '',
-  '#0000FA',
-  '#4B802D',
-  '#DB1300',
-  '#202081',
-  '#690400',
-  '#457A7A',
-  '#1B1B1B',
-  '#7A7A7A',
-];
+/*
+                     --------------------------------------------------------------------
+                                      MINESWEEPER IN PURE JAVASCRIPT
+                     --------------------------------------------------------------------
+*/
 
-/*----- app's state (variables) -----*/
-var size = 16;
-var board;
-var bombCount;
-var timeElapsed;
-var adjBombs;
-var hitBomb;
-var elapsedTime;
-var timerId;
-var winner;
+(function(){
+  var Game = (function(){
 
-/*----- cached element references -----*/
-var boardEl = document.getElementById('board');
-
-/*----- event listeners -----*/
-document.getElementById('size-btns').addEventListener('click', function(e) {
-  size = parseInt(e.target.id.replace('size-', ''));
-  init();
-  render();
-});
-
-boardEl.addEventListener('click', function(e) {
-  if (winner || hitBomb) return;
-  var clickedEl;
-  clickedEl = e.target.tagName.toLowerCase() === 'img' ? e.target.parentElement : e.target;
-  if (clickedEl.classList.contains('game-cell')) {
-    if (!timerId) setTimer();
-    var row = parseInt(clickedEl.dataset.row);
-    var col = parseInt(clickedEl.dataset.col);
-    var cell = board[row][col];
-    if (e.shiftKey && !cell.revealed && bombCount > 0) {
-      bombCount += cell.flag() ? -1 : 1;
-    } else {
-      hitBomb = cell.reveal();
-      if (hitBomb) {
-        revealAll();
-        clearInterval(timerId);
-        e.target.style.backgroundColor = 'red';
+     // for ease of access!
+    var components = {
+      clock: document.getElementById('js-clock'),
+      smiley: document.getElementById('js-play-mood'),
+      menu: document.getElementById('js-options'),
+      board: document.getElementById('js-game-board'),
+      noOfMines: document.getElementById('js-no-of-mines'),
+      gameOptions: document.getElementById('game-options'),
+      isGameOver: false,
+      isTimeOut: false,
+      isFirstTile: true,
+      images: {
+        sad: "images/sad.png",
+        smile: "images/smile.png",
+        cool: "images/cool.png"
       }
-    }
-    winner = getWinner();
-    render();
-  }
-});
+    };
 
-function createResetListener() { 
-  document.getElementById('reset').addEventListener('click', function() {
-    init();
-    render();
-  });
-}
-
-/*----- functions -----*/
-function setTimer () {
-  timerId = setInterval(function(){
-    elapsedTime += 1;
-    document.getElementById('timer').innerText = elapsedTime.toString().padStart(3, '0');
-  }, 1000);
-};
-
-function revealAll() {
-  board.forEach(function(rowArr) {
-    rowArr.forEach(function(cell) {
-      cell.reveal();
-    });
-  });
-};
-
-function buildTable() {
-  var topRow = `
-  <tr>
-    <td class="menu" id="window-title-bar" colspan="${size}">
-      <div id="window-title"><img src="images/mine-menu-icon.png"> Minesweeper</div>
-      <div id="window-controls"><img src="images/window-controls.png"></div>
-    </td>
-  <tr>
-    <td class="menu" id="folder-bar" colspan="${size}">
-      <div id="folder1"><a href="https://github.com/nickarocho/minesweeper/blob/master/readme.md" target="blank">Read Me </a></div>
-      <div id="folder2"><a href="https://github.com/nickarocho/minesweeper" target="blank">Source Code</a></div>
-    </td>
-  </tr>
-  </tr>
-    <tr>
-      <td class="menu" colspan="${size}">
-          <section id="status-bar">
-            <div id="bomb-counter">000</div>
-            <div id="reset"><img src="images/smiley-face.png"></div>
-            <div id="timer">000</div>
-          </section>
-      </td>
-    </tr>
-    `;
-  boardEl.innerHTML = topRow + `<tr>${'<td class="game-cell"></td>'.repeat(size)}</tr>`.repeat(size);
-  boardEl.style.width = sizeLookup[size].tableWidth;
-  createResetListener();
-  var cells = Array.from(document.querySelectorAll('td:not(.menu)'));
-  cells.forEach(function(cell, idx) {
-    cell.setAttribute('data-row', Math.floor(idx / size));
-    cell.setAttribute('data-col', idx % size);
-  });
-}
-
-function buildArrays() {
-  var arr = Array(size).fill(null);
-  arr = arr.map(function() {
-    return new Array(size).fill(null);
-  });
-  return arr;
-};
-
-function buildCells(){
-  board.forEach(function(rowArr, rowIdx) {
-    rowArr.forEach(function(slot, colIdx) {
-      board[rowIdx][colIdx] = new Cell(rowIdx, colIdx, board);
-    });
-  });
-  addBombs();
-  runCodeForAllCells(function(cell){
-    cell.calcAdjBombs();
-  });
-};
-
-function init() {
-  buildTable();
-  board = buildArrays();
-  buildCells();
-  bombCount = getBombCount();
-  elapsedTime = 0;
-  clearInterval(timerId);
-  timerId = null;
-  hitBomb = false;
-  winner = false;
-};
-
-function getBombCount() {
-  var count = 0;
-  board.forEach(function(row){
-    count += row.filter(function(cell) {
-      return cell.bomb;
-    }).length
-  });
-  return count;
-};
-
-function addBombs() {
-  var currentTotalBombs = sizeLookup[`${size}`].totalBombs;
-  while (currentTotalBombs !== 0) {
-    var row = Math.floor(Math.random() * size);
-    var col = Math.floor(Math.random() * size);
-    var currentCell = board[row][col]
-    if (!currentCell.bomb){
-      currentCell.bomb = true
-      currentTotalBombs -= 1
-    }
-  }
-};
-
-function getWinner() {
-  for (var row = 0; row<board.length; row++) {
-    for (var col = 0; col<board[0].length; col++) {
-      var cell = board[row][col];
-      if (!cell.revealed && !cell.bomb) return false;
-    }
-  } 
-  return true;
-};
-
-function render() {
-  document.getElementById('bomb-counter').innerText = bombCount.toString().padStart(3, '0');
-  var seconds = timeElapsed % 60;
-  var tdList = Array.from(document.querySelectorAll('[data-row]'));
-  tdList.forEach(function(td) {
-    var rowIdx = parseInt(td.getAttribute('data-row'));
-    var colIdx = parseInt(td.getAttribute('data-col'));
-    var cell = board[rowIdx][colIdx];
-    if (cell.flagged) {
-      td.innerHTML = flagImage;
-    } else if (cell.revealed) {
-      if (cell.bomb) {
-        td.innerHTML = bombImage;
-      } else if (cell.adjBombs) {
-        td.className = 'revealed'
-        td.style.color = colors[cell.adjBombs];
-        td.textContent = cell.adjBombs;
-      } else {
-        td.className = 'revealed'
+    // holds the data of the application.
+    var model = {
+      config: {
+        rows: 9,
+        cols: 9,
+        mines: 10,
+        tiles: [],
+        setConfig: function(rows, cols, mines){
+          this.rows = rows;
+          this.cols = cols;
+          this.mines = mines;
+        }
+      },
+      tile: { // properties of each tile
+        isFlagged: false,
+        isOpened: false,
+        hasMine: false,
+        count: 0
       }
-    } else {
-      td.innerHTML = '';
-    }
-  });
-  if (hitBomb) {
-    document.getElementById('reset').innerHTML = '<img src=images/dead-face.png>';
-    runCodeForAllCells(function(cell) {
-      if (!cell.bomb && cell.flagged) {
-        var td = document.querySelector(`[data-row="${cell.row}"][data-col="${cell.col}"]`);
-        td.innerHTML = wrongBombImage;
+    };
+
+    // User Interface
+    var views = {
+
+      // handles the actual logic of Game Menu hide/show mechanism
+      menuToggle: function(){
+        components.menu.classList.toggle("hidden");
+      },
+
+      generateBoard: function(){
+        var rows = model.config.rows;
+        var cols = model.config.cols;
+        var mines = model.config.mines;
+        var html= "",td, id =0;
+
+        for(var i=0; i<rows; i++){
+          html += '<tr>';
+          for(var j=0; j<cols; j++){
+            td = '<td class="tile" id="{id}"></td>';
+            html += td.replace("{id}", id);
+            id++;
+          }
+          html += '</tr>';
+        }
+        components.board.innerHTML = html;
+        components.noOfMines.innerHTML = mines;
+      },
+
+      setSmiley: function(mood){
+        if(mood === 'sad'){
+          components.smiley.setAttribute("src", components.images.sad);
+        }
+        else if(mood === 'smile'){
+          components.smiley.setAttribute("src", components.images.smile);
+        }
+        else if(mood === 'cool'){
+          components.smiley.setAttribute("src", components.images.cool);
+        }
+      },
+
+    };
+
+    // handles all the interactions/events - updates the model/views accordingly.
+    var controller = {
+
+      handleMenuToggle: function(){
+        components.gameOptions.addEventListener('click', function(){
+          views.menuToggle();
+        });
+      },
+
+      selectDifficulty: function(){
+        var beginner = document.getElementById('beginner');
+        var intermediate = document.getElementById('intermediate');
+        var expert = document.getElementById('expert');
+        if(beginner.checked){
+          model.config.setConfig(9,9,10);
+        }
+        else if(intermediate.checked){
+          model.config.setConfig(16,16,40);
+        }
+        else if(expert.checked){
+          model.config.setConfig(16,30,99);
+        }
+      },
+
+      newGameInit: function(){
+        var newGame = document.getElementById('js-new-game');
+        newGame.addEventListener('click', function(){
+          controller.selectDifficulty(); // On newGame - Select difficulty level and generate the game board.
+          views.generateBoard(); // generates board with the chosen difficulty.
+          views.menuToggle(); // hide Menu after the new Game has been initialized.
+          controller.tileProp(); // sets properties to the tiles of newly generated board.
+        });
+      },
+
+      // adds MODEL.TILE's properties(isOpened, hasMine, etc) to individual tile.
+      tileProp: function(){
+        // ensures that tiles are pushed to an empty array on every reset.
+        model.config.tiles.length = 0;
+        var tds = document.getElementsByClassName('tile');
+
+        for(var i = 0; i < tds.length; i++){
+          var eachTile = Object.create(model.tile); // model.tile is now a prototype of eachTile. Crockford \m/s
+          eachTile.td = tds[i]; // associates tile with properties!
+          model.config.tiles.push(eachTile);
+        }
+      },
+
+      handleMouseEvents: function(){
+        // disables Right Click (Context Menu) on the board so that the Flagging should work on right click.
+        components.board.addEventListener('contextmenu', function(e){
+          e.preventDefault();
+        });
+
+        // finds target element through Event Delegation, i.e finds the clicked tile.
+        components.board.addEventListener('mouseup', function(e){
+          if(e.target && e.target.nodeName === 'TD'){
+            var tileId = parseInt(e.target.id, 10);
+            var tile = document.getElementById(tileId);
+
+            // if it's right Click --- DO THE FLAGGING!
+            if(e.button === 2){
+              console.log("Hello, Right Click");
+              if(model.config.tiles[tileId].isOpened === false){
+                controller.doFlagging(tileId);
+              }
+            }
+            else{
+              controller.playGame(tileId);
+            }
+          }
+        });
+      },
+
+      playGame: function(tileId){
+        // if it's the first click of the game, initialize it - start timer, generate mines, and calculate values!
+        if(components.isFirstTile === true){
+          controller.timer();
+          controller.plantMines(tileId);
+          controller.calculateValuesAroundMines();
+          components.isFirstTile = false;
+        }
+        else if(controller.hasClickedMine(tileId)){
+          views.setSmiley("sad");
+          clearInterval(time);
+
+          //Show all the mines which are not flagged!
+          for(var i = 0; i < model.config.tiles.length; i++){
+            if(model.config.tiles[i].hasMine === true & model.config.tiles[i].isFlagged === false){
+              model.config.tiles[i].td.classList.add("mines");
+            }
+          }
+        }
+        else if(controller.hasWon()){
+          console.log("Yesss! I'mma cool dude!");
+        }
+
+        controller.revealTiles(tileId);
+      },
+
+      timer: function(){
+        var counter = 0;
+        time = setInterval(function(){
+          if(counter < 999){
+            counter++;
+            components.clock.innerHTML = counter;
+          }
+          else {
+            clearInterval(time);
+            views.setSmiley("sad");
+            components.isTimeOut = true;
+            components.isGameOver = true;
+          }
+        }, 1000);
+      },
+
+      // Do not plant a mine at the position of the first Click!
+      plantMines: function(tileId){
+        var random, k;
+        var rows = model.config.rows;
+        var cols  = model.config.cols;
+        var tiles = model.config.tiles;
+        for(k = 0; k < model.config.mines; k++){
+          random = Math.floor(Math.random() * ((rows*cols)-1));
+          if(random === tileId || tiles[random].hasMine === true){
+            console.log("Either the mine has already been planted here, or it's the id of first clicked tile");
+            k--;
+          }
+          else{
+            tiles[random].hasMine = true;
+            console.log(random);
+          }
+        }
+        console.log("Alert! Mines have been planted, play carefully now.");
+      },
+
+      hasClickedMine: function(tileId){
+        if(model.config.tiles[tileId].hasMine === true && model.config.tiles[tileId].isFlagged === false){
+          console.log("You clicked on mine, dude!");
+          return true;
+        }
+      },
+
+      doFlagging: function(tileId){
+        var minesElement = components.noOfMines;
+        var mineValue = parseInt(minesElement.innerHTML, 10);
+        var tile = model.config.tiles[tileId];
+        if(tile.isFlagged === false){
+          if(mineValue > 0){
+            tile.td.classList.add("flagged");
+            tile.isFlagged = true;
+            mineValue--;
+            minesElement.innerHTML = mineValue;
+          }
+        }
+        else if(mineValue < model.config.mines){
+          tile.isFlagged = false;
+          tile.td.classList.remove("flagged");
+          mineValue++;
+          minesElement.innerHTML = mineValue;
+        }
+      },
+
+      calculateValuesAroundMines: function(){
+        var tiles = model.config.tiles;
+        var cols = model.config.cols;
+        var i, mine, top, bottom;
+        for(i = 0; i < tiles.length; i++){
+          if(tiles[i].hasMine === true){
+
+            // increment left tile count by 1 if it's not a mine
+            if(tiles[i-1] && tiles[i-1].td !== null && tiles[i-1].hasMine === false){
+              tiles[i-1].count += 1;
+              console.log(tiles[i-1].count);
+            }
+            // increment right tile count by 1 if it's not a mine
+            if(tiles[i+1] && tiles[i+1].td !== null && tiles[i+1].hasMine === false){
+              tiles[i+1].count += 1;
+              console.log(tiles[i+1].count);
+            }
+
+            // increment count of tile top-left, top, top-right by 1
+            if(tiles[i].td.parentNode.previousElementSibling !== null){
+              top = i - cols;
+              // increment top tile count by 1
+              if(tiles[top].hasMine === false){
+                tiles[top].count += 1;
+              }
+              //increment top-left tile count by 1
+              if(tiles[top-1] && tiles[top-1].td !== null && tiles[top-1].hasMine === false){
+                tiles[top-1].count += 1;
+              }
+              // increment top-right tile count by 1
+              if(tiles[top+1] && tiles[top+1].td !== null && tiles[top+1].hasMine === false){
+                tiles[top+1].count += 1;
+              }
+            }
+
+            // increment bottom, bottom-left and bottom-right tiles count
+            if(tiles[i].td.parentNode.nextElementSibling !== null){
+              bottom = i + cols;
+
+              // increment bottom tile count by 1
+              if(tiles[bottom].hasMine === false){
+                tiles[bottom].count += 1;
+              }
+              //increment bottom-left tile count by 1
+              if(tiles[bottom-1] && tiles[bottom-1].td !== null && tiles[bottom-1].hasMine === false){
+                tiles[bottom-1].count += 1;
+              }
+              // increment bottom-right tile count by 1
+              if(tiles[bottom+1] && tiles[bottom+1].td !== null && tiles[bottom+1].hasMine === false){
+                tiles[bottom+1].count += 1;
+              }
+            }
+          }
+        }
+      },
+
+      hasWon: function(){
+        return false;
+      },
+
+      // FLOOD FILL ALGORITHM --- Recursion!
+      // reveal tiles till you find the boundary of the numbers
+      revealTiles: function(tileId){
+        var tiles = model.config.tiles;
+        var tile = tiles[tileId];
+        var cols = model.config.cols;
+        if(tile.isOpened === false && tile.hasMine === false){
+          tile.isOpened = true;
+          tile.td.classList.add("opened-tile");
+          var count = tile.count;
+          if(count === 0){
+
+            // since the clicked tile has zero count,
+            // let's check all its surrounding tiles
+            // and reveal them if they have zero counts too, or
+            // reveal RECURSIVELY till you find the boundary of the numbers i.e greater than 0
+
+            // let's check for LEFT of CLICKED TILE
+            if(tiles[tileId-1] && tiles[tileId-1].hasMine === false){
+              controller.revealTiles(tileId-1);
+            }
+            // let's check for RIGHT of CLICKED TILE
+            if(tiles[tileId+1] && tiles[tileId+1].hasMine === false){
+              controller.revealTiles(tileId+1);
+            }
+            // let's check for TOP, TOP-LEFT, TOP-RIGHT
+            if(tiles[tileId].td.parentNode.previousElementSibling !== null){
+              var top = tileId - cols;
+
+              // TOP
+              if(tiles[top].hasMine === false){
+                controller.revealTiles(top);
+              }
+              // TOP-LEFT
+              if(tiles[top-1] && tiles[top-1].hasMine === false){
+                controller.revealTiles(top-1);
+              }
+              // TOP-RIGHT
+              if(tiles[top+1] && tiles[top+1].hasMine === false){
+                controller.revealTiles(top+1);
+              }
+            }
+            // Let's check for BOTTOM, BOTTOM-LEFT, BOTTOM-RIGHT
+            if(tiles[tileId].td.parentNode.nextElementSibling !== null){
+              var bottom = tileId + cols;
+
+              // BOTTOM
+              if(tiles[bottom].hasMine === false){
+                controller.revealTiles(bottom);
+              }
+              // BOTTOM-LEFT
+              if(tiles[bottom-1] && tiles[bottom-1].hasMine === false){
+                controller.revealTiles(bottom-1);
+              }
+              // BOTTOM-RIGHT
+              if(tiles[bottom+1] && tiles[bottom+1].hasMine === false){
+                controller.revealTiles(bottom+1);
+              }
+            }
+          }
+          else {
+            tile.td.innerHTML = count;
+          }
+        }
       }
-    });
-  } else if (winner) {
-    document.getElementById('reset').innerHTML = '<img src=images/cool-face.png>';
-    clearInterval(timerId);
-  }
-};
+    };
 
-function runCodeForAllCells(cb) {
-  board.forEach(function(rowArr) {
-    rowArr.forEach(function(cell) {
-      cb(cell);
-    });
-  });
-}
-
-init();
-render();
+    return{
+      init: function(){
+        views.generateBoard();
+        controller.handleMenuToggle();
+        controller.newGameInit();
+        controller.tileProp();
+        controller.handleMouseEvents();
+      }
+    };
+  })();
+  Game.init();
+}());

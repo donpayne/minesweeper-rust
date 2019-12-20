@@ -1,33 +1,71 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Minesweeper</title>
-    <link rel="stylesheet" href="css/main.css">
-    <script
-    src="https://code.jquery.com/jquery-3.2.1.min.js"
-    integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
-    crossorigin="anonymous"></script>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Minesweeper in pure Js</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
 </head>
-<body>   
-    <div class="flex-container">
-        <div class="game-board">
-            <br>
-                <table id="board"></table>
-        </div>
+<body oncontextmenu ="return false;">
+  <div class="site">
+    <div class="game-container">
+      <div class="header">
+	<h2>Minesweeper</h2>
+	<a href="#" id="game-options">Game options &#x25BE;</a>
+      </div>
+      <div class="options hidden" id="js-options">
+	<span> Choose Difficulty Level </span>
+	<form action="">
+	  <table class="menu-table">
+	    <tr class="tb-head">
+	      <td>Level</td>
+	      <td>Columns</td>
+	      <td>Rows</td>
+	      <td>Mines</td>
+	    </tr>
+	    <tr>
+	      <td><label><input type="radio" name="level" id="beginner" checked="checked">&nbsp; Beginner</label></td>
+	      <td>9</td>
+	      <td>9</td>
+	      <td>10</td>
+	    </tr>
+	    <tr>
+	      <td><label><input type="radio" name ="level" id="intermediate">&nbsp; Intermediate</label></td>
+	      <td>16</td>
+	      <td>16</td>
+	      <td>40</td>
+	    </tr>
+	    <tr>
+	      <td><label><input type="radio" name ="level" id="expert">&nbsp; Expert</label></td>
+	      <td>16</td>
+	      <td>30</td>
+	      <td>99</td>
+	    </tr>
+	  </table>
+	  <a href="#" class="new-game" id="js-new-game">New Game</a>
+	</form>
+      </div>
+      <div class="game">
+      	<div class="values">
+      	  <span class="no-of-mines" id="js-no-of-mines"></span>
+      	  <img src="images/smile.png" alt="Emoticons" id="js-play-mood">
+      	  <span id="js-clock">0</span>
+      	</div>
+      	<div class="board">
+      	  <table class="game-board" id="js-game-board">
+
+      	  </table>
+      	</div>
+      </div>
     </div>
-        <section id="footer">
-            <div id="start"><img src="images/start.png"></div>
-            <div id="size-btns">
-                <div id="size-btns"><button id="size-9"><img src="images/easy.png"> Easy</button></div> 
-                <div id="size-btns"><button id="size-16"><img src="images/medium.png"> Medium</button></div> 
-                <div id="size-btns"><button id="size-30"><img src="images/hard.png"> Hard</button></div>
-            </div>
-            <div id="clock"><em>"Shift + Click"</em></strong> to toggle <img src="images/flag.png"></div>
-        </section>
-    <script src="js/cell.js"></script>
-    <script src="js/main.js"></script>
+    <div class="footer">
+      <div class="foot">
+	<a href="https://github.com/akash-bhardwaj/Minesweeper" target="_blank"><i class="fa fa-github-alt fa-lg"></i></a>
+      </div>
+    </div>
+  </div>
+
+<script src="js/main.js" type="text/javascript"></script>
 </body>
 </html>

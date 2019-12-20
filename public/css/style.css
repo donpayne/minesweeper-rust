@@ -1,0 +1,120 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+html{
+    background: #f4f5f6;
+    font-family: 'helvetica', sans-serif;
+}
+a {
+    text-decoration: none;
+}
+.game-container{
+    width: 55%;
+    margin: 70px auto;
+    background: #ffffff;
+    padding: 15px;
+    border: 1px solid #e9e9e9;
+    text-align: center;
+}
+.header {
+    padding-bottom: 15px;
+}
+.header > h2 {
+    padding-bottom: 15px;
+    font-weight: normal;
+}
+.options{
+    border: 1px solid #e9e9e9;
+    padding: 10px;
+    width: 55%;
+    margin: 0 auto;
+}
+.hidden{
+    display: none;
+}
+.menu-table{
+    margin: 7px 0;
+    text-align: left;
+}
+.menu-table .tb-head{
+    background: #e9e9e9;
+}
+.menu-table td{
+    padding: 5px 10px;
+}
+.new-game {
+    padding: 7px 15px;
+    background: #4c8efa;
+    color: #fff;
+    font-size: 13px;
+}
+.values {
+    margin-top: 10px;
+    background: #f2f3f4;
+    border: 1px solid #e9e9e9;
+}
+.values > img {
+    vertical-align: middle;
+    padding: 0px 40px;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+}
+.values > span {
+    padding: 12px 25px;
+    background: #fff;
+    border: 1px solid #e9e9e9;
+}
+.board {
+    margin-top: 10px;
+    display: inline-block;
+}
+.game-board {
+    border-spacing: 0;
+    padding: 10px;
+    border: 1px solid #e9e9e9;
+    background: #f2f3f4;
+}
+.tile {
+    background: #98a1ac;
+    border-top: 3px solid #f4f4f4;
+    border-left: 3px solid #f4f4f4;
+    border-bottom: 3px solid #6C7A89;
+    border-right: 3px solid #6C7A89;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+.opened-tile{
+    background: #c0c7cd;
+    /*border: 2px solid #616d7b;*/
+    border-top: 2px solid #616d7b;
+    border-left: 2px solid #616d7b;
+    border-right: 0px;
+    border-bottom: 0px;
+    padding: 2px;
+}
+.mines {
+    background: red url('../images/mine.png') center center;
+    border: none;
+
+}
+.flagged {
+    background: url('../images/flag.png');
+    background-size: 20px 20px;
+}
+.footer{
+    background: #fff;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    border-top: 1px solid #d9d9d9;
+}
+.foot {
+    width: 55%;
+    margin: 0 auto;
+    text-align: center;
+    padding: 10px 30px;
+}
